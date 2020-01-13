@@ -10,14 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.ylspringboot.dubbo</groupId>
-    <artifactId>dubbo-client</artifactId>
+    <artifactId>dubbo-api</artifactId>
 
-    <dependencies>
-        <dependency>
-            <groupId>com.ylspringboot.dubbo</groupId>
-            <artifactId>dubbo-api</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-        </dependency>
-    </dependencies>
 
 </project>

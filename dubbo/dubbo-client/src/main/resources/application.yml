@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: dubbo-client-demo
+dubbo:
+  protocol:
+    port: 20880
+    ##协议名称(dubbo,rmi,hessian,http,webservice,thrift,memcached,redis,rest)默认是dubbo
+    name: dubbo
+  registry:
+    address: zookeeper://118.190.37.175:2181?timeout=30000
+  application:
+    name: dubbo-client-demo
+server:
+  port: 8080

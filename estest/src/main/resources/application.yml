@@ -1,0 +1,27 @@
+server:
+  port: 8085
+spring:
+  application:
+    name: estest
+  elasticsearch:
+    rest:
+      uris: "http://192.168.213.128:9200"
+  data:
+    elasticsearch:
+      client:
+        reactive:
+          endpoints: 192.168.213.128:9200
+#  data:
+#    elasticsearch:
+#      client:
+#        reactive:
+#          endpoints: "192.168.213.128:9200"
+logging:
+  level:
+#    org.springframework.data.elasticsearch.client.WIRE: trace
+#    org.apache.http: debug
+    org:
+      springframework:
+        data:
+          elasticsearch:
+            core: DEBUG

@@ -32,3 +32,8 @@ build/
 /mvnw.cmd
 /.mvn/
 /mvnw
+/estest/.mvn
+/estest/estest.iml
+/estest/HELP.md
+/estest/mvnw.cmd
+/estest/mvnw

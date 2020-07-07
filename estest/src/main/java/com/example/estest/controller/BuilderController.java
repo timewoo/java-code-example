@@ -2,12 +2,12 @@ package com.example.estest.controller;
 
 import com.example.estest.entity.Builder;
 import com.example.estest.service.BuilderService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
 import javax.annotation.Resource;
-import java.sql.SQLOutput;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.Date;
@@ -19,6 +19,7 @@ import java.util.List;
  */
 @RequestMapping("builder")
 @RestController
+@Slf4j
 public class BuilderController {
 
     @Resource
@@ -46,17 +47,23 @@ public class BuilderController {
 
     @GetMapping("selectByRest")
     public List<Builder> selectByRest(@RequestParam String name){
-        System.out.println("list start");
-        List<Builder> builders = builderService.selectByNameRest(name);
-        System.out.println("list end");
+        log.info("list start");
+        List<Builder> builders = null;
+        try {
+            builders = builderService.selectByNameRest(name);
+        } catch (InterruptedException e) {
+            log.info(e.getMessage());
+            Thread.currentThread().interrupt();
+        }
+        log.info("list end");
         return builders;
     }
 
     @GetMapping("selectByReactor")
     public Flux<Builder> selectByReactor(@RequestParam String name){
-        System.out.println("flux start");
+        log.info("flux start");
         Flux<Builder> builderFlux = builderService.selectByNameReactor(name);
-        System.out.println("flux end");
+        log.info("flux end");
         return builderFlux;
     }
 

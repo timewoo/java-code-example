@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
 import javax.annotation.Resource;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.Date;
@@ -65,6 +66,11 @@ public class BuilderController {
         Flux<Builder> builderFlux = builderService.selectByNameReactor(name);
         log.info("flux end");
         return builderFlux;
+    }
+
+    @GetMapping("selectByNameClient")
+    public List<Builder> selectByNameClient(@RequestParam String name) throws IOException {
+        return builderService.selectByNameClient(name);
     }
 
     @GetMapping(value = "/times", produces = MediaType.TEXT_EVENT_STREAM_VALUE)

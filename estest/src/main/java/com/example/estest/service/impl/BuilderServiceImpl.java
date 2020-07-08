@@ -1,25 +1,41 @@
 package com.example.estest.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.example.estest.entity.Builder;
 import com.example.estest.repository.BuilderRepository;
 import com.example.estest.service.BuilderService;
 import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.unit.Fuzziness;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.springframework.data.elasticsearch.core.*;
-import org.springframework.data.elasticsearch.core.query.GetQuery;
+import org.elasticsearch.rest.RestStatus;
+import org.elasticsearch.search.Scroll;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.ScoreSortBuilder;
+import org.elasticsearch.search.sort.SortOrder;
+import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
+import org.springframework.data.elasticsearch.core.ReactiveElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.query.HighlightQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestParam;
 import reactor.core.publisher.Flux;
 
 import javax.annotation.Resource;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
@@ -38,6 +54,9 @@ public class BuilderServiceImpl implements BuilderService {
 
     @Resource
     private ReactiveElasticsearchTemplate reactiveElasticsearchTemplate;
+
+    @Resource
+    private RestHighLevelClient restHighLevelClient;
 
     @Override
     public void save(Builder builder) {
@@ -75,6 +94,32 @@ public class BuilderServiceImpl implements BuilderService {
         log.info(query.getQuery().toString());
         Flux<SearchHit<Builder>> search = reactiveElasticsearchTemplate.search(query, Builder.class);
         return search.map(SearchHit::getContent);
+    }
+
+    @Override
+    public List<Builder> selectByNameClient(String name) throws IOException {
+        SearchRequest searchRequest = new SearchRequest("builder");
+        QueryBuilder queryBuilder = QueryBuilders.matchQuery("builderName",name).fuzziness(Fuzziness.AUTO);
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(queryBuilder).sort(new FieldSortBuilder("buildDate").order(SortOrder.ASC));
+        String[] includeFields = new String[]{"id","builderName"};
+        searchSourceBuilder.fetchSource(includeFields,new String[]{});
+        HighlightBuilder highlightBuilder = new HighlightBuilder();
+        HighlightBuilder.Field builderName = new HighlightBuilder.Field("builderName");
+        builderName.highlighterType("unified");
+        highlightBuilder.field(builderName);
+        searchSourceBuilder.highlighter(highlightBuilder);
+        searchRequest.source(searchSourceBuilder);
+        SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+        List<Builder> builderList = new ArrayList<>();
+        if (searchResponse.status().equals(RestStatus.OK)){
+            searchResponse.getHits().forEach(hit->{
+                Builder builder = JSON.parseObject(hit.getSourceAsString(), Builder.class);
+                builder.setId(hit.getId());
+                builderList.add(builder);
+            });
+        }
+        return builderList;
     }
 
 }

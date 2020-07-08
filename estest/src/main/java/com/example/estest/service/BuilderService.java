@@ -3,6 +3,7 @@ package com.example.estest.service;
 import com.example.estest.entity.Builder;
 import reactor.core.publisher.Flux;
 
+import java.io.IOException;
 import java.security.PrivateKey;
 import java.util.List;
 
@@ -23,4 +24,6 @@ public interface BuilderService {
     List<Builder> selectByNameRest (String name) throws InterruptedException;
 
     Flux<Builder> selectByNameReactor(String name);
+
+    List<Builder> selectByNameClient(String name) throws IOException;
 }

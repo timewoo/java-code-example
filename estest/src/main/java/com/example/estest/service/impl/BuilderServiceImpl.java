@@ -5,11 +5,17 @@ import com.example.estest.entity.Builder;
 import com.example.estest.repository.BuilderRepository;
 import com.example.estest.service.BuilderService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.beanutils.BeanUtils;
+import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.Fuzziness;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentFactory;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.rest.RestStatus;
@@ -28,9 +34,8 @@ import reactor.core.publisher.Flux;
 
 import javax.annotation.Resource;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -56,6 +61,30 @@ public class BuilderServiceImpl implements BuilderService {
     @Override
     public void save(Builder builder) {
         builderRepository.save(builder);
+    }
+
+    @Override
+    public void saveByRest(Builder builder) {
+        elasticsearchRestTemplate.save(builder);
+    }
+
+    @Override
+    public void saveByClient(Builder builder){
+        IndexRequest indexRequest = new IndexRequest("builder");
+        indexRequest.id();
+        String s = JSON.toJSONString(builder);
+        indexRequest.source(s, XContentType.JSON);
+        // 同步方法
+        try {
+            IndexResponse indexResponse = restHighLevelClient.index(indexRequest, RequestOptions.DEFAULT);
+            if (!indexResponse.status().equals(RestStatus.CREATED)){
+                throw new Exception("新增失败："+indexResponse.status().getStatus());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

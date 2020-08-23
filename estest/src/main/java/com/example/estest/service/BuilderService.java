@@ -4,7 +4,6 @@ import com.example.estest.entity.Builder;
 import reactor.core.publisher.Flux;
 
 import java.io.IOException;
-import java.security.PrivateKey;
 import java.util.List;
 
 /**
@@ -14,6 +13,10 @@ import java.util.List;
 public interface BuilderService {
 
     void save(Builder builder);
+
+    void saveByRest(Builder builder);
+
+    public void saveByClient(Builder builder);
 
     Builder select(String id);
 

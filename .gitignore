@@ -37,3 +37,13 @@ build/
 /estest/HELP.md
 /estest/mvnw.cmd
 /estest/mvnw
+/distributedlock/.mvn
+/distributedlock/distributedlock.iml
+/distributedlock/HELP.md
+/distributedlock/mvnw.cmd
+/distributedlock/mvnw
+/distributedlock/src/test
+src/main/resources/static/
+src/main/resources/templates/
+distributedlock/src/main/resources/static/
+distributedlock/src/main/resources/templates/

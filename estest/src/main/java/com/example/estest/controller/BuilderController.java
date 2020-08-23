@@ -27,27 +27,37 @@ public class BuilderController {
     private BuilderService builderService;
 
     @PostMapping("save")
-    public void save(@RequestBody Builder builder){
+    public void save(@RequestBody Builder builder) {
         builderService.save(builder);
     }
 
+    @PostMapping("saveByRest")
+    public void saveByRest(@RequestBody Builder builder) {
+        builderService.saveByRest(builder);
+    }
+
+    @PostMapping("saveByClient")
+    public void saveByClient(@RequestBody Builder builder){
+        builderService.saveByClient(builder);
+    }
+
     @GetMapping("selectById")
-    public Builder selectById(@RequestParam String id){
+    public Builder selectById(@RequestParam String id) {
         return builderService.select(id);
     }
 
     @GetMapping("selectByName")
-    public List<Builder> selectByName(@RequestParam String name){
+    public List<Builder> selectByName(@RequestParam String name) {
         return builderService.selectByName(name);
     }
 
     @GetMapping("selectByIk")
-    public List<Builder> selectByIk(@RequestParam String name){
+    public List<Builder> selectByIk(@RequestParam String name) {
         return builderService.selectByIk(name);
     }
 
     @GetMapping("selectByRest")
-    public List<Builder> selectByRest(@RequestParam String name){
+    public List<Builder> selectByRest(@RequestParam String name) {
         log.info("list start");
         List<Builder> builders = null;
         try {
@@ -61,7 +71,7 @@ public class BuilderController {
     }
 
     @GetMapping("selectByReactor")
-    public Flux<Builder> selectByReactor(@RequestParam String name){
+    public Flux<Builder> selectByReactor(@RequestParam String name) {
         log.info("flux start");
         Flux<Builder> builderFlux = builderService.selectByNameReactor(name);
         log.info("flux end");
@@ -74,7 +84,7 @@ public class BuilderController {
     }
 
     @GetMapping(value = "/times", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> times(){
-        return Flux.interval(Duration.ofSeconds(1)).map(l->new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+    public Flux<String> times() {
+        return Flux.interval(Duration.ofSeconds(1)).map(l -> new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
     }
 }

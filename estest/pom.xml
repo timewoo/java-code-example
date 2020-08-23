@@ -32,6 +32,11 @@
             <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
         <dependency>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+            <version>1.9.3</version>
+        </dependency>
+        <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
             <version>1.2.70</version>

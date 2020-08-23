@@ -1,0 +1,5 @@
+spring:
+  redis:
+    host: 118.190.37.175
+    password: yanglin123
+    port: 6301

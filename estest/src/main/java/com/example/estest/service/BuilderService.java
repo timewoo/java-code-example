@@ -16,7 +16,11 @@ public interface BuilderService {
 
     void saveByRest(Builder builder);
 
-    public void saveByClient(Builder builder);
+    void saveByClient(Builder builder);
+
+    void batchByClient(List<Builder> builders);
+
+    void saveByFile(String str);
 
     Builder select(String id);
 

@@ -6,6 +6,9 @@ import com.example.estest.repository.BuilderRepository;
 import com.example.estest.service.BuilderService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.BeanUtils;
+import org.elasticsearch.action.bulk.BulkItemResponse;
+import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
@@ -16,6 +19,7 @@ import org.elasticsearch.common.unit.Fuzziness;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.rest.RestStatus;
@@ -69,7 +73,7 @@ public class BuilderServiceImpl implements BuilderService {
     }
 
     @Override
-    public void saveByClient(Builder builder){
+    public void saveByClient(Builder builder) {
         IndexRequest indexRequest = new IndexRequest("builder");
         indexRequest.id();
         String s = JSON.toJSONString(builder);
@@ -77,8 +81,52 @@ public class BuilderServiceImpl implements BuilderService {
         // 同步方法
         try {
             IndexResponse indexResponse = restHighLevelClient.index(indexRequest, RequestOptions.DEFAULT);
-            if (!indexResponse.status().equals(RestStatus.CREATED)){
-                throw new Exception("新增失败："+indexResponse.status().getStatus());
+            if (!indexResponse.status().equals(RestStatus.CREATED)) {
+                throw new Exception("新增失败：" + indexResponse.status().getStatus());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void batchByClient(List<Builder> builders) {
+        BulkRequest bulkRequest = new BulkRequest("builder");
+        builders.forEach(builder -> {
+            IndexRequest indexRequest = new IndexRequest("builder");
+            indexRequest.id();
+            String s = JSON.toJSONString(builder);
+            indexRequest.source(s, XContentType.JSON);
+            bulkRequest.add(indexRequest);
+        });
+        try {
+            BulkResponse bulkResponse = restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+            if (bulkResponse.hasFailures()){
+                for (BulkItemResponse bulkItemResponse:bulkResponse){
+                    if (bulkItemResponse.isFailed()){
+                        BulkItemResponse.Failure failure = bulkItemResponse.getFailure();
+                        System.out.println(failure.toString());
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void saveByFile(String str) {
+        IndexRequest indexRequest = new IndexRequest("jsontest");
+        indexRequest.id();
+//        String s = JSON.toJSONString(builder);
+        indexRequest.source(str, XContentType.JSON);
+        // 同步方法
+        try {
+            IndexResponse indexResponse = restHighLevelClient.index(indexRequest, RequestOptions.DEFAULT);
+            if (!indexResponse.status().equals(RestStatus.CREATED)) {
+                throw new Exception("新增失败：" + indexResponse.status().getStatus());
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -105,7 +153,7 @@ public class BuilderServiceImpl implements BuilderService {
 
     @Override
     public List<Builder> selectByNameRest(String name) throws InterruptedException {
-        NativeSearchQuery query = new NativeSearchQueryBuilder().withQuery(QueryBuilders.matchQuery("builderName",name)).build();
+        NativeSearchQuery query = new NativeSearchQueryBuilder().withQuery(QueryBuilders.matchQuery("builderName", name)).build();
         log.info(query.getQuery().toString());
         SearchHits<Builder> search = elasticsearchRestTemplate.search(query, Builder.class);
         Thread.sleep(1000);
@@ -114,7 +162,7 @@ public class BuilderServiceImpl implements BuilderService {
 
     @Override
     public Flux<Builder> selectByNameReactor(String name) {
-        NativeSearchQuery query = new NativeSearchQueryBuilder().withQuery(QueryBuilders.matchQuery("builderName",name)).build();
+        NativeSearchQuery query = new NativeSearchQueryBuilder().withQuery(QueryBuilders.matchQuery("builderName", name)).build();
         log.info(query.getQuery().toString());
         Flux<SearchHit<Builder>> search = reactiveElasticsearchTemplate.search(query, Builder.class);
         return search.map(SearchHit::getContent);
@@ -123,11 +171,11 @@ public class BuilderServiceImpl implements BuilderService {
     @Override
     public List<Builder> selectByNameClient(String name) throws IOException {
         SearchRequest searchRequest = new SearchRequest("builder");
-        QueryBuilder queryBuilder = QueryBuilders.matchQuery("builderName",name).fuzziness(Fuzziness.AUTO);
+        QueryBuilder queryBuilder = QueryBuilders.matchQuery("builderName", name).fuzziness(Fuzziness.AUTO);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         searchSourceBuilder.query(queryBuilder).sort(new FieldSortBuilder("buildDate").order(SortOrder.ASC));
-        String[] includeFields = new String[]{"id","builderName"};
-        searchSourceBuilder.fetchSource(includeFields,new String[]{});
+        String[] includeFields = new String[]{"id", "builderName"};
+        searchSourceBuilder.fetchSource(includeFields, new String[]{});
         HighlightBuilder highlightBuilder = new HighlightBuilder();
         HighlightBuilder.Field builderName = new HighlightBuilder.Field("builderName");
         builderName.highlighterType("unified");
@@ -136,8 +184,8 @@ public class BuilderServiceImpl implements BuilderService {
         searchRequest.source(searchSourceBuilder);
         SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
         List<Builder> builderList = new ArrayList<>();
-        if (searchResponse.status().equals(RestStatus.OK)){
-            searchResponse.getHits().forEach(hit->{
+        if (searchResponse.status().equals(RestStatus.OK)) {
+            searchResponse.getHits().forEach(hit -> {
                 Builder builder = JSON.parseObject(hit.getSourceAsString(), Builder.class);
                 builder.setId(hit.getId());
                 builderList.add(builder);
